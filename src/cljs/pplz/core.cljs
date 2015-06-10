@@ -7,40 +7,47 @@
             [clojure.string :as string]))
 
 (defonce app-state (atom {:contacts [
-                                     {:first "Vincent" :last "Chase"}
-                                     {:first "Ari" :last "Gold"}
-                                     {:first "Johnny" :last "Drama"}]}))
+                                     {:first "Vincent" :last "Chase" :phone "610-234-4567"}
+                                     {:first "Ari" :last "Gold" :phone "543-567-8907"}
+                                     {:first "Johnny" :last "Drama" :phone "345-789-1000"}]}))
 
 (defn build-contact
-  [contact]
-  (let [[first last :as full-name] (string/split contact #"\s+")]
-    {:first first :last last}))
+  [name phone]
+  (let [[first last :as full-name] (string/split name #"\s+")
+        phone phone]
+    {:first first :last last :phone phone}))
 
 (defn add-contact
   [contacts owner]
-  (let [new-contact (-> (om/get-node owner "new-contact")
-                        .-value
-                        (build-contact contact))]
-    (when new-contact
+  (let [new-contact-name (-> (om/get-node owner "new-contact-name")
+                        .-value)
+
+        new-contact-phone (-> (om/get-node owner "new-contact-phone")
+                              .-value)
+        new-contact (build-contact new-contact-name new-contact-phone)]
+    (when new-contact-name
       (om/transact! contacts :contacts #(conj % new-contact))
-      (om/set-state! owner :text ""))))
+      (om/set-state! owner :name "")
+      (om/set-state! owner :phone ""))))
 
 (defn contact-view
   [contact owner]
   (reify
     om/IRenderState
     (render-state
-      [this {:keys [delete]}]
+      [this state]
+      (println state)
       (dom/tr nil
               (dom/td nil (:first contact))
-              (dom/td nil (:last contact)
-                      (dom/td nil
-                              (dom/button #js {:onClick
-                                               (fn [e] (put! delete @contact))} "Delete")))))))
+              (dom/td nil (:last contact))
+              (dom/td nil (:phone contact))
+              (dom/td nil
+                      (dom/button #js {:onClick
+                                       (fn [e] (put! (:delete state) @contact))} "Delete"))))))
 
 (defn handle-change
-  [e owner {:keys [text]}]
-  (om/set-state! owner :text (.. e -target -value)))
+  [e owner state key]
+  (om/set-state! owner key (.. e -target -value)))
 
 
 (defn contacts-view
@@ -50,7 +57,8 @@
     (init-state
       [_]
       {:delete (chan)
-       :text ""})
+       :name ""
+       :phone ""})
     om/IWillMount
     (will-mount
       [_]
@@ -75,10 +83,12 @@
                                              (dom/td nil "Actions")))
                           (apply dom/tbody nil
                                  (om/build-all contact-view (:contacts contacts)
-                                               {:init-state {:delete delete}})))
+                                               {:init-state state})))
                (dom/div nil
-                        (dom/input #js {:type "text" :ref "new-contact" :value (:text state)
-                                        :onChange #(handle-change % owner state)})
+                        (dom/input #js {:type "text" :ref "new-contact-name" :value (:name state)
+                                        :onChange #(handle-change % owner state :name)})
+                        (dom/input #js {:type "text" :ref "new-contact-phone" :value (:phone state)
+                                        :onChange #(handle-change % owner state :phone)})
                         (dom/button #js {:onClick #(add-contact contacts owner)} "Add Contact"))))))
 
 (defn main []

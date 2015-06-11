@@ -75,21 +75,27 @@
     (render-state
       [this state]
       (dom/div nil
-               (dom/table nil
+               (dom/div #js {:className "form"}
+                        (dom/div {:className "form-group"}
+                                 (dom/label nil "Full Name")
+                                 (dom/input #js {:className "form-control":type "text" :ref "new-contact-name" :value (:name state)
+                                        :onChange #(handle-change % owner state :name)}))
+                        (dom/div {:className "form-group"}
+                                 (dom/label nil "Phone")
+                                 (dom/input #js {:className "form-control" :type "text" :ref "new-contact-phone" :value (:phone state)
+                                        :onChange #(handle-change % owner state :phone)}))
+                        (dom/button #js {:className "btn" :onClick #(add-contact contacts owner)} "Add Contact"))
+               (dom/table #js {:className "table"}
                           (dom/thead nil
                                      (dom/tr nil
                                              (dom/td nil "First")
                                              (dom/td nil "Last")
+                                             (dom/td nil "Phone")
                                              (dom/td nil "Actions")))
                           (apply dom/tbody nil
                                  (om/build-all contact-view (:contacts contacts)
                                                {:init-state state})))
-               (dom/div nil
-                        (dom/input #js {:type "text" :ref "new-contact-name" :value (:name state)
-                                        :onChange #(handle-change % owner state :name)})
-                        (dom/input #js {:type "text" :ref "new-contact-phone" :value (:phone state)
-                                        :onChange #(handle-change % owner state :phone)})
-                        (dom/button #js {:onClick #(add-contact contacts owner)} "Add Contact"))))))
+               ))))
 
 (defn main []
   (om/root

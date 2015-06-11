@@ -10,6 +10,15 @@
                                      {:first "Vincent" :last "Chase" :phone "610-234-4567"}
                                      {:first "Ari" :last "Gold" :phone "543-567-8907"}
                                      {:first "Johnny" :last "Drama" :phone "345-789-1000"}]}))
+(def app-history (atom [@app-state]))
+
+(add-watch app-state :history
+           (fn
+             [_ _ _ n]
+             (when-not (= (last @app-history) n)
+               (swap! app-history conj n))
+               (println app-history)
+             ))
 
 (defn build-contact
   [name phone]
@@ -20,7 +29,7 @@
 (defn add-contact
   [contacts owner]
   (let [new-contact-name (-> (om/get-node owner "new-contact-name")
-                        .-value)
+                             .-value)
 
         new-contact-phone (-> (om/get-node owner "new-contact-phone")
                               .-value)
@@ -36,7 +45,6 @@
     om/IRenderState
     (render-state
       [this state]
-      (println state)
       (dom/tr nil
               (dom/td nil (:first contact))
               (dom/td nil (:last contact))
@@ -44,6 +52,18 @@
               (dom/td nil
                       (dom/button #js {:onClick
                                        (fn [e] (put! (:delete state) @contact))} "Delete"))))))
+
+(defn undo-button
+  [owner]
+  (reify
+    om/IRender
+    (render
+      [this]
+      (dom/div #js {:className "undo-section"}
+      (dom/button #js {:className "undo" :onClick (fn [e] (do
+                                           (swap! app-history pop)
+                                           (reset! app-state (last @app-history))))} "Undo!")
+      ))))
 
 (defn handle-change
   [e owner state key]
@@ -75,16 +95,17 @@
     (render-state
       [this state]
       (dom/div nil
+        (om/build undo-button owner)
                (dom/div #js {:className "form"}
                         (dom/div {:className "form-group"}
                                  (dom/label nil "Full Name")
                                  (dom/input #js {:className "form-control":type "text" :ref "new-contact-name" :value (:name state)
-                                        :onChange #(handle-change % owner state :name)}))
+                                                 :onChange #(handle-change % owner state :name)}))
                         (dom/div {:className "form-group"}
                                  (dom/label nil "Phone")
                                  (dom/input #js {:className "form-control" :type "text" :ref "new-contact-phone" :value (:phone state)
-                                        :onChange #(handle-change % owner state :phone)}))
-                        (dom/button #js {:className "btn" :onClick #(add-contact contacts owner)} "Add Contact"))
+                                                 :onChange #(handle-change % owner state :phone)}))
+                        (dom/button #js {:className "btn add-contact-button" :onClick #(add-contact contacts owner)} "Add Contact"))
                (dom/table #js {:className "table"}
                           (dom/thead nil
                                      (dom/tr nil

@@ -3,11 +3,10 @@
 
 ## Development
 
-Start a REPL (in a terminal: `lein repl`, or from Emacs: open a
-clj/cljs file in the project, then do `M-x cider-jack-in`. Make sure
-CIDER is up to date).
+Open a terminal and type `lein repl` to start a Clojure REPL
+(interactive prompt).
 
-In the REPL do
+In the REPL, type
 
 ```clojure
 (run)
@@ -86,3 +85,7 @@ Copyright © 2014 FIXME
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
+
+## Chestnut
+
+Created with [Chestnut](http://plexus.github.io/chestnut/) 0.8.1 (90e701e0).
